@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    // Both maps point into src, which the package ships for them: go to definition opens the
+    // TypeScript source, and a debugger steps through it rather than through the compiled output.
+    "declarationMap": true,
+    "sourceMap": true,
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src"],
+  // The script-tag entry is esbuild's alone: compiled here too, it would land in dist as an orphaned
+  // ES module whose declaration promises exports the published IIFE does not have.
+  "exclude": ["src/global.ts"]
+}

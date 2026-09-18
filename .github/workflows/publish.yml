@@ -1,0 +1,94 @@
+name: Publish
+
+# A version tag — `1.0.1` — publishes that version to npm. npm never lets a published version be
+# replaced, so the run tests first, refuses a tag that disagrees with the version in package.json,
+# and waits for an approval before it publishes.
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: read
+
+# Two tags pushed together publish one after the other; a publish is never cancelled halfway.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The whole history, to tell whether the tagged commit is on main.
+          fetch-depth: 0
+
+      # A tag publishes the commit it points at, and the environment checks only the tag's name:
+      # a tag on a branch still under review would publish code nobody merged.
+      - name: The tagged commit is on main
+        run: |
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "::error::Tag $GITHUB_REF_NAME points at a commit that is not on main"
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      # The tag is what a release is known by, package.json is what ends up in every request's
+      # `X-Talqyn-SDK` header: a tag that names another version publishes nothing.
+      - name: The tag names the version in package.json
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME, but package.json says $version"
+            exit 1
+          fi
+
+      # npm refuses a version it already has; asked here, the question spares the reviewer an
+      # approval for a publish that cannot succeed.
+      - name: The version is not on npm yet
+        run: |
+          if [ -n "$(npm view "@talqyn/web@$GITHUB_REF_NAME" version 2>/dev/null)" ]; then
+            echo "::error::@talqyn/web@$GITHUB_REF_NAME is already on npm"
+            exit 1
+          fi
+
+      - run: npm ci
+
+      - name: Tests, typecheck, and the build
+        run: npm test && npm run typecheck && npm run build
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-24.04
+    # npm trusts this workflow only in this environment: it admits a version tag and nothing else,
+    # and holds the job until a reviewer approves it.
+    environment: npm
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      # No npm token is stored anywhere: npm takes the job's OIDC token in exchange for a one-time
+      # publish token, and the provenance statement is signed with it too.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      # Node 24 brings npm 11, which publishes over OIDC. No dependency cache: a poisoned one would
+      # run inside the job that holds the OIDC token.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - run: npm ci
+
+      # prepublishOnly runs the tests and the typecheck once more and builds dist from scratch:
+      # this is the tarball that stays on npm for good.
+      - run: npm publish

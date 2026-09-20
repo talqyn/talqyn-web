@@ -37,6 +37,37 @@ export interface TalqynSearchQuery {
 }
 
 /**
+ * A request for the start screen (`POST /v1/search/start`): what to show under an **empty** search
+ * field.
+ *
+ * There is no `query` field, and that is the point — an empty query is not a query. It has neither a
+ * vector nor a prefix, so ranking, completions, and correction are all off, and the response carries
+ * popularity rather than relevance. Hence its own endpoint and its own request.
+ *
+ * Fields left unset are filled from the client's defaults — locale, place, and A/B bucket.
+ */
+export interface TalqynStartQuery {
+  /** The language to build the screen in. Unset uses the client default. */
+  readonly locale?: TalqynLocale | undefined;
+  /**
+   * How many products to return. 1–50. Defaults to 10.
+   *
+   * Applies to the `products` block only: the other blocks are fixed in size by the server — 5 past
+   * queries, 8 popular ones, 8 categories.
+   */
+  readonly limit?: number | undefined;
+  /**
+   * The shopper's city — the `id` of an option in the `city` group of `talqyn.search.filters`.
+   * Products unavailable there are left out of the block rather than shown as out of stock.
+   */
+  readonly cityId?: string | undefined;
+  /** The shopper's store — the `id` of an option in the `location` group. Takes precedence over {@link cityId}. */
+  readonly locationId?: string | undefined;
+  /** The storefront's A/B bucket: echoed into analytics, no effect on the screen. */
+  readonly variant?: string | undefined;
+}
+
+/**
  * The selection criteria shared by a listing and its filter panel.
  *
  * They are shared on the server too: `/v1/search/full` and `/v1/search/filters` accept one body, and
@@ -179,6 +210,17 @@ export function encodeSearchQuery(query: TalqynSearchQuery): string {
     price_min: present(query.priceMin),
     price_max: present(query.priceMax),
     in_stock_only: query.inStockOnly ?? false,
+    city_id: present(query.cityId),
+    location_id: present(query.locationId),
+    variant: present(query.variant),
+  });
+}
+
+/** The start-screen body, omitting every field left unset. */
+export function encodeStartQuery(query: TalqynStartQuery): string {
+  return encodeJson({
+    locale: present(query.locale),
+    limit: query.limit ?? 10,
     city_id: present(query.cityId),
     location_id: present(query.locationId),
     variant: present(query.variant),

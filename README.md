@@ -188,6 +188,14 @@ found.history; // the shopper's past queries (needs events, see below)
 found.correctedFrom; // set if the server quietly searched for corrected text
 found.searchId; // travels into the click event
 
+// The start screen — what to show when the field is focused and empty.
+const start = await talqyn.search.start({ limit: 8 });
+start.history; // this shopper's recent queries (needs events, see below)
+start.popularQueries; // what the storefront searches for
+start.categories; // root categories of the catalog
+start.products; // popular products, ranked by clicks — no score, no relevance
+start.searchId; // travels into the click event, with source 'start'
+
 // A listing with filters and sorting, a page at a time.
 const query: TalqynFullSearchQuery = {
   query: 'smartphone',
@@ -208,6 +216,10 @@ TalqynFiltersResponse.cityGroup(panel); // the city picker: option.id goes into 
 TalqynFiltersResponse.locationGroup(panel); // the store picker: option.id goes into locationId
 TalqynFiltersResponse.selectedFilters(panel); // what is selected now, in the shape of the next request
 ```
+
+Call `start` when the field takes focus, not on every render: each call is billed as
+a search. Report a tap on one of its cards with `source: 'start'` — those clicks are
+kept out of search ranking, so that the screen cannot rank itself.
 
 `talqynId` is Talqyn's internal id and does not exist in your catalog. Everything
 you do on your side, do by `externalId` — it is optional, and whether to show a
@@ -407,6 +419,9 @@ Where the `searchId` comes from:
 - **Instant search** — `found.searchId`, one per response.
 - **A listing** — `listing.searchId`, on the **first** page only: later pages
   continue the same results, so keep the id for the whole listing.
+- **The start screen** — `start.searchId`, with `source: TalqynEventSource.start`.
+  These clicks are kept out of search ranking: the screen's products are the
+  most-clicked ones, so counting them there would let it rank itself.
 - **The consultant** — the `searchId` of the turn's `products`, with
   `source: TalqynEventSource.consultant` and `position` counted across all of the
   turn's products.

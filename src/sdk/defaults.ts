@@ -5,6 +5,7 @@ import type {
   TalqynFilterCriteria,
   TalqynFullSearchQuery,
   TalqynSearchQuery,
+  TalqynStartQuery,
 } from './models/queries.js';
 
 /** Request defaults as of one moment: locale, the shopper's place, the A/B bucket. */
@@ -52,6 +53,15 @@ function placeOf(snapshot: TalqynDefaultsSnapshot, value: Place): { cityId: stri
 }
 
 export function withSearchDefaults(snapshot: TalqynDefaultsSnapshot, query: TalqynSearchQuery): TalqynSearchQuery {
+  return {
+    ...query,
+    locale: query.locale ?? snapshot.locale,
+    variant: query.variant ?? snapshot.variant,
+    ...placeOf(snapshot, query),
+  };
+}
+
+export function withStartDefaults(snapshot: TalqynDefaultsSnapshot, query: TalqynStartQuery): TalqynStartQuery {
   return {
     ...query,
     locale: query.locale ?? snapshot.locale,

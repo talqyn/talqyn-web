@@ -5,6 +5,7 @@ import {
   encodeFiltersQuery,
   encodeFullSearchQuery,
   encodeSearchQuery,
+  encodeStartQuery,
 } from '../../src/sdk/models/queries.js';
 import {
   encodeCategoryClickEvent,
@@ -45,6 +46,23 @@ describe('query encoding', () => {
     const body = json(encodeSearchQuery({ query: 'x', cityId: null as unknown as undefined }));
     expect(body['limit']).toBe(20);
     expect(body).not.toHaveProperty('city_id');
+  });
+
+  it('uses the contract field names for the start screen and carries no query', () => {
+    const body = json(encodeStartQuery({ locale: 'kk', limit: 8, cityId: '10', variant: 'b' }));
+    expect(body['locale']).toBe('kk');
+    expect(body['limit']).toBe(8);
+    expect(body['city_id']).toBe('10');
+    expect(body['variant']).toBe('b');
+    // An empty query is not a query: the endpoint has no such field, and sending one would be a 422.
+    expect(body).not.toHaveProperty('query');
+    expect(body).not.toHaveProperty('location_id');
+  });
+
+  it('defaults the start-screen limit and takes an empty request', () => {
+    const body = json(encodeStartQuery({}));
+    expect(body['limit']).toBe(10);
+    expect(Object.keys(body)).toEqual(['limit']);
   });
 
   it('omits empty filters from a listing request', () => {

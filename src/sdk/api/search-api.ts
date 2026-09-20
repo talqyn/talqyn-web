@@ -1,18 +1,28 @@
-import { withCriteriaDefaults, withFullSearchDefaults, withSearchDefaults, type TalqynDefaults } from '../defaults.js';
+import {
+  withCriteriaDefaults,
+  withFullSearchDefaults,
+  withSearchDefaults,
+  withStartDefaults,
+  type TalqynDefaults,
+} from '../defaults.js';
 import { decodeFiltersResponse, type TalqynFiltersResponse } from '../models/filter-models.js';
 import {
   encodeFiltersQuery,
   encodeFullSearchQuery,
   encodeSearchQuery,
+  encodeStartQuery,
   TalqynFullSearchQuery,
   type TalqynFiltersQuery,
   type TalqynSearchQuery,
+  type TalqynStartQuery,
 } from '../models/queries.js';
 import {
   decodeFullSearchResponse,
   decodeSearchResponse,
+  decodeStartResponse,
   type TalqynFullSearchResponse,
   type TalqynSearchResponse,
+  type TalqynStartResponse,
 } from '../models/search-models.js';
 import type { TalqynApiClient } from '../networking/api-client.js';
 import { linkSignal } from '../internal/async.js';
@@ -61,6 +71,30 @@ export class TalqynSearchApi {
     return this.client.fetchJson(
       { path: 'search/', body: encodeSearchQuery(prepared), signal: options.signal },
       decodeSearchResponse,
+    );
+  }
+
+  /**
+   * Fetches the start screen of an empty search field: `POST /v1/search/start`.
+   *
+   * What to show when the shopper focuses the field and has typed nothing: their recent queries, what
+   * the storefront searches for, the catalog's root categories, and popular products. This is not
+   * `search('')` — an empty query has no vector and no prefix, so ranking, completions, and correction
+   * are all off, and the answer carries popularity instead of relevance.
+   *
+   * Report card taps through `talqyn.events` with `source: TalqynEventSource.start` and the response's
+   * `searchId`, the way you would for search results.
+   *
+   * Each call is billed as a search, so call it when the field takes focus rather than on every render.
+   *
+   * @param query How many products to return and where the shopper is. Everything is optional.
+   * @throws {TalqynError} Commonly `rateLimited` when the search bucket is exhausted.
+   */
+  async start(query: TalqynStartQuery = {}, options: TalqynRequestOptions = {}): Promise<TalqynStartResponse> {
+    const prepared = withStartDefaults(this.defaults.current, query);
+    return this.client.fetchJson(
+      { path: 'search/start', body: encodeStartQuery(prepared), signal: options.signal },
+      decodeStartResponse,
     );
   }
 

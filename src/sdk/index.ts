@@ -50,6 +50,7 @@ export type {
   TalqynCategory,
   TalqynChip,
   TalqynSearchResponse,
+  TalqynStartResponse,
   TalqynSuggestion,
 } from './models/search-models.js';
 export {
@@ -65,6 +66,7 @@ export type {
   TalqynFilterCriteria,
   TalqynFiltersQuery,
   TalqynSearchQuery,
+  TalqynStartQuery,
 } from './models/queries.js';
 export {
   TalqynActionFilters,

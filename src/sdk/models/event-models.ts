@@ -2,7 +2,7 @@ import { encodeJson } from '../internal/json.js';
 import type { TalqynLocale } from '../locale.js';
 
 /** Where a shopper's action took place. */
-export type TalqynEventSource = 'instant' | 'full' | 'cip';
+export type TalqynEventSource = 'instant' | 'full' | 'cip' | 'start';
 
 export const TalqynEventSource = {
   /** The search field's dropdown. */
@@ -11,6 +11,15 @@ export const TalqynEventSource = {
   full: 'full',
   /** The consultant's results. Not valid for a search-submit event. */
   consultant: 'cip',
+  /**
+   * The start screen of an empty search field — `talqyn.search.start`. Not valid for a search-submit
+   * event: the screen has no query to submit.
+   *
+   * A tap here is counted apart from the rest on purpose. The screen's own products come from the
+   * most-clicked list, so feeding these clicks back would let it rank itself; they stay out of search
+   * ranking entirely.
+   */
+  start: 'start',
 } as const;
 
 /** A shopper tapped a product card. */

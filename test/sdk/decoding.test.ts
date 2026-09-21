@@ -38,7 +38,7 @@ describe('decoding', () => {
           "category_path": ["Phones and gadgets", "Phones"],
           "price": 449990, "price_before": 479990, "in_stock": true,
           "rating": 4.8, "reviews_count": 213,
-          "image_url": "https://cdn.example.com/1.jpg", "url": "https://mechta.kz/p/1",
+          "image_url": "https://cdn.example.com/1.jpg", "url": "https://shop.example.com/p/1",
           "score": 0.87
         }],
         "suggestions": [{"text": "iphone 15 pro", "weight": 12, "highlight_from": 8}],
@@ -72,7 +72,7 @@ describe('decoding', () => {
     expect(product.inStock).toBe(true);
     expect(TalqynProduct.hasDiscount(product)).toBe(true);
     expect(product.imageUrl).toBe('https://cdn.example.com/1.jpg');
-    expect(product.productUrl).toBe('https://mechta.kz/p/1');
+    expect(product.productUrl).toBe('https://shop.example.com/p/1');
     expect(product.brandLogoUrl).toBeUndefined();
   });
 
@@ -88,7 +88,7 @@ describe('decoding', () => {
         "products": [{
           "talqyn_id": 1234, "external_id": "256073",
           "title": "Apple iPhone 15 128GB", "price": 449990, "in_stock": true,
-          "image_url": "https://cdn.example.com/1.jpg", "url": "https://mechta.kz/p/1",
+          "image_url": "https://cdn.example.com/1.jpg", "url": "https://shop.example.com/p/1",
           "score": null
         }]
       }`,

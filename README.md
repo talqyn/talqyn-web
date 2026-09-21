@@ -218,8 +218,8 @@ TalqynFiltersResponse.selectedFilters(panel); // what is selected now, in the sh
 ```
 
 Call `start` when the field takes focus, not on every render: each call is billed as
-a search. Report a tap on one of its cards with `source: 'start'` — those clicks are
-kept out of search ranking, so that the screen cannot rank itself.
+a search. Report a tap on one of its cards with `source: TalqynEventSource.start` —
+those clicks are kept out of search ranking, so that the screen cannot rank itself.
 
 `talqynId` is Talqyn's internal id and does not exist in your catalog. Everything
 you do on your side, do by `externalId` — it is optional, and whether to show a
@@ -394,9 +394,12 @@ on these three events:
 
 | Event | Report it when | Carries |
 |---|---|---|
-| a submitted query | the shopper submits a query — Enter in the field, or opening a listing | the query, `source` (`instant` or `full`, never `consultant`), `resultsCount` when it is known |
+| a submitted query | the shopper submits a query — Enter in the field, a query picked on the start screen, or opening a listing | the query, `source` (`instant` or `full`, never `consultant` or `start`), `resultsCount` when it is known |
 | a product click | a product card is clicked in your own search UI | the `searchId` of the results it was shown in, `talqynId` (not your SKU), the zero-based `position`, the `source` |
-| a category click | a category from `found.categories` is clicked | the category id and the query it was shown for |
+| a category click | a category from `found.categories` or `start.categories` is clicked | the category id and the query it was shown for — none on the start screen |
+
+A query picked on the start screen is submitted like a typed one, with the source
+of the results it opens.
 
 ```ts
 import { TalqynEventSource } from '@talqyn/web';

@@ -54,7 +54,7 @@ describe('query encoding', () => {
     expect(body['limit']).toBe(8);
     expect(body['city_id']).toBe('10');
     expect(body['variant']).toBe('b');
-    // An empty query is not a query: the endpoint has no such field, and sending one would be a 422.
+    // Not search(''): the endpoint takes no query, and an empty one is a 422 on instant search.
     expect(body).not.toHaveProperty('query');
     expect(body).not.toHaveProperty('location_id');
   });

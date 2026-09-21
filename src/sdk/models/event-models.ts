@@ -25,10 +25,10 @@ export const TalqynEventSource = {
 /** A shopper tapped a product card. */
 export interface TalqynProductClickEvent {
   /**
-   * The impression the click belongs to — the `searchId` of the search response, the listing page, or
-   * the consultant's products. Without it a click has no denominator and click-through cannot be
-   * computed. A click from deep pagination legitimately arrives without one, since only the first page
-   * carries an id.
+   * The impression the click belongs to — the `searchId` of the search response, the listing page, the
+   * start screen, or the consultant's products. Without it a click has no denominator and click-through
+   * cannot be computed. A click from deep pagination legitimately arrives without one, since only the
+   * first page carries an id.
    */
   readonly searchId?: string | undefined;
   /** Talqyn's internal product id — `talqynId`, not your SKU. */
@@ -44,14 +44,17 @@ export interface TalqynProductClickEvent {
 /**
  * A shopper submitted a search query.
  *
- * Not optional analytics: the `history` block of an instant-search response is assembled from these
- * rows. A storefront running on a device token has to report them itself — by definition there is no
- * backend of yours in the chain to do it.
+ * Not optional analytics: the `history` blocks of instant search and of the start screen are assembled
+ * from these rows. A storefront running on a device token has to report them itself — by definition
+ * there is no backend of yours in the chain to do it.
  */
 export interface TalqynSearchSubmitEvent {
   /** The query as submitted. 1–500 characters. */
   readonly query: string;
-  /** Where it was submitted from. Only `instant` and `full` are accepted. */
+  /**
+   * Where it was submitted from. Only `instant` and `full` are accepted: a query picked on the start
+   * screen takes the source of the results it opens.
+   */
   readonly source: TalqynEventSource;
   /** The language searched in. Filled from the client default when unset. */
   readonly locale?: TalqynLocale | undefined;
@@ -61,11 +64,11 @@ export interface TalqynSearchSubmitEvent {
   readonly variant?: string | undefined;
 }
 
-/** A shopper tapped a category in the navigation block of a search response. */
+/** A shopper tapped a category — in a search response's navigation block or on the start screen. */
 export interface TalqynCategoryClickEvent {
   /** The category tapped — `TalqynCategory.id`. */
   readonly categoryId: number;
-  /** The query whose results the category appeared in. */
+  /** The query whose results the category appeared in. Unset on the start screen, which has no query. */
   readonly query?: string | undefined;
   /** The storefront's A/B bucket. Filled from the client default when unset. */
   readonly variant?: string | undefined;

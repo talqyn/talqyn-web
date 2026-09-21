@@ -22,7 +22,7 @@ export interface TalqynChip {
   readonly weight: number;
 }
 
-/** A category in the navigation block of a search response. */
+/** A category to navigate to — from a search response or the start screen. */
 export interface TalqynCategory {
   /** The category id, as accepted by the `categoryId` request parameter. */
   readonly id: number;

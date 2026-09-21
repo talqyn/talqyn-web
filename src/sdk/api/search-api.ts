@@ -41,7 +41,7 @@ export interface TalqynListingWithFilters {
 }
 
 /**
- * Instant search, listings, and the filter panel. Reached through `talqyn.search`.
+ * Instant search, the start screen, listings, and the filter panel. Reached through `talqyn.search`.
  *
  * Requires the `search` scope, which every device token carries. Every request inherits the client's
  * defaults — locale, place, A/B bucket — for the fields it leaves unset.

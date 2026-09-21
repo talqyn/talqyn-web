@@ -1,6 +1,6 @@
 {
   "name": "@talqyn/web",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Web SDK for the Talqyn public API: smart search, facets, and the LLM consultant, with the consultant screen as a web component.",
   "license": "MIT",
   "author": {

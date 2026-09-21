@@ -11,6 +11,7 @@ import {
 
 const emptySearch = '{"search_id":"s","query":"x","locale":"ru","total":0,"results":[]}';
 const emptyListing = '{"query":"x","locale":"ru","offset":0,"limit":20,"sort":"relevance","total":0,"results":[]}';
+const emptyStart = '{"search_id":"s","locale":"ru","history":[],"popular_queries":[],"categories":[],"products":[]}';
 
 /** Endpoints: path, body, headers, and how defaults are filled in. */
 describe('API requests', () => {
@@ -65,6 +66,38 @@ describe('API requests', () => {
     const talqyn = await TestFixtures.preparedClient(transport);
     await talqyn.search.search('iphone', { limit: 5 });
     expect(transport.sent[0]?.bodyJson['limit']).toBe(5);
+  });
+
+  it('addresses the start screen and fills its defaults', async () => {
+    const transport = new StubTransport();
+    transport.enqueue(emptyStart);
+
+    const talqyn = await TestFixtures.preparedClient(transport, { cityId: '10' });
+    talqyn.setLocale('kk');
+    talqyn.setVariant('exp-b');
+    await talqyn.search.start();
+
+    const sent = transport.sent[0];
+    expect(sent?.path).toBe('/v1/search/start');
+    expect(sent?.method).toBe('POST');
+    expect(sent?.bodyJson['locale']).toBe('kk');
+    expect(sent?.bodyJson['city_id']).toBe('10');
+    expect(sent?.bodyJson['variant']).toBe('exp-b');
+    expect(sent?.bodyJson['limit']).toBe(10);
+    expect(sent?.bodyJson).not.toHaveProperty('query');
+  });
+
+  it('takes an explicit start-screen limit and place', async () => {
+    const transport = new StubTransport();
+    transport.enqueue(emptyStart);
+
+    const talqyn = await TestFixtures.preparedClient(transport, { cityId: '10' });
+    await talqyn.search.start({ limit: 8, locationId: '5' });
+
+    expect(transport.sent[0]?.bodyJson['limit']).toBe(8);
+    expect(transport.sent[0]?.bodyJson['location_id']).toBe('5');
+    // A store beats a city: the default city must not tag along with an explicit store.
+    expect(transport.sent[0]?.bodyJson).not.toHaveProperty('city_id');
   });
 
   it('sends the same criteria to the listing and its panel', async () => {

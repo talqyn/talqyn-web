@@ -46,7 +46,7 @@ export class Talqyn {
   /** The value of the `X-Talqyn-SDK` header: platform and version. */
   static readonly clientHeader: string = TALQYN_CLIENT_HEADER;
 
-  /** Instant search, listings, and the filter panel. */
+  /** Instant search, the start screen, listings, and the filter panel. */
   readonly search: TalqynSearchApi;
 
   /** The consultant and the shopper's chat history. */

@@ -5,7 +5,7 @@
  * narrowed to the builds it actually broke in. Quote it when contacting Talqyn support. A test
  * keeps it equal to the version in `package.json`.
  */
-export const TALQYN_VERSION = '1.0.0';
+export const TALQYN_VERSION = '1.1.0';
 
 /**
  * The value of the `X-Talqyn-SDK` header: platform and version.

@@ -14,7 +14,7 @@ import { decodeChatSummaries, decodeChatTranscript } from '../../src/sdk/models/
 import { decodeConsultantAnswer } from '../../src/sdk/models/consultant-models.js';
 import { decodeFiltersResponse } from '../../src/sdk/models/filter-models.js';
 import { decodeProduct, lenientUrl } from '../../src/sdk/models/product.js';
-import { decodeSearchResponse } from '../../src/sdk/models/search-models.js';
+import { decodeSearchResponse, decodeStartResponse } from '../../src/sdk/models/search-models.js';
 
 function decode<T>(decoder: (value: unknown) => T | undefined, body: string): T {
   const decoded = decoder(JSON.parse(body));
@@ -38,7 +38,7 @@ describe('decoding', () => {
           "category_path": ["Phones and gadgets", "Phones"],
           "price": 449990, "price_before": 479990, "in_stock": true,
           "rating": 4.8, "reviews_count": 213,
-          "image_url": "https://cdn.example.com/1.jpg", "url": "https://mechta.kz/p/1",
+          "image_url": "https://cdn.example.com/1.jpg", "url": "https://shop.example.com/p/1",
           "score": 0.87
         }],
         "suggestions": [{"text": "iphone 15 pro", "weight": 12, "highlight_from": 8}],
@@ -72,8 +72,51 @@ describe('decoding', () => {
     expect(product.inStock).toBe(true);
     expect(TalqynProduct.hasDiscount(product)).toBe(true);
     expect(product.imageUrl).toBe('https://cdn.example.com/1.jpg');
-    expect(product.productUrl).toBe('https://mechta.kz/p/1');
+    expect(product.productUrl).toBe('https://shop.example.com/p/1');
     expect(product.brandLogoUrl).toBeUndefined();
+  });
+
+  it('decodes a start screen', () => {
+    const response = decode(
+      decodeStartResponse,
+      `{
+        "search_id": "0d3c1b2a-0000-4000-8000-000000000000",
+        "locale": "ru",
+        "history": ["sony headphones", "iphone 15 case"],
+        "popular_queries": ["iphone 15", "tv", "robot vacuum"],
+        "categories": [{"id": 12, "name": "Phones and gadgets", "slug": "smartfony-i-gadzhety", "path": "smartfony_i_gadzhety", "parent_name": null}],
+        "products": [{
+          "talqyn_id": 1234, "external_id": "256073",
+          "title": "Apple iPhone 15 128GB", "price": 449990, "in_stock": true,
+          "image_url": "https://cdn.example.com/1.jpg", "url": "https://shop.example.com/p/1",
+          "score": null
+        }]
+      }`,
+    );
+
+    expect(response.searchId).toBe('0d3c1b2a-0000-4000-8000-000000000000');
+    expect(response.locale).toBe('ru');
+    expect(response.history).toEqual(['sony headphones', 'iphone 15 case']);
+    expect(response.popularQueries).toEqual(['iphone 15', 'tv', 'robot vacuum']);
+    expect(response.categories[0]?.id).toBe(12);
+    expect(response.categories[0]?.parentName).toBeUndefined();
+
+    const product = response.products[0];
+    if (!product) throw new Error('expected a product');
+    expect(product.talqynId).toBe(1234);
+    expect(product.externalId).toBe('256073');
+    // Popularity, not relevance: the screen ranks by clicks, so a card carries no score.
+    expect(product.score).toBeUndefined();
+  });
+
+  /** Four independent blocks: a server that omits one is not a broken response. */
+  it('reads an empty start screen as empty blocks', () => {
+    const response = decode(decodeStartResponse, '{"search_id": "s", "locale": "kk"}');
+    expect(response.history).toEqual([]);
+    expect(response.popularQueries).toEqual([]);
+    expect(response.categories).toEqual([]);
+    expect(response.products).toEqual([]);
+    expect(decodeStartResponse(JSON.parse('[]'))).toBeUndefined();
   });
 
   it('accepts the legacy product_id alias', () => {

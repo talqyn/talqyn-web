@@ -22,7 +22,7 @@ export interface TalqynChip {
   readonly weight: number;
 }
 
-/** A category in the navigation block of a search response. */
+/** A category to navigate to — from a search response or the start screen. */
 export interface TalqynCategory {
   /** The category id, as accepted by the `categoryId` request parameter. */
   readonly id: number;
@@ -85,6 +85,45 @@ export interface TalqynSearchResponse {
    * "search for … instead".
    */
   readonly correctedFrom: string | undefined;
+}
+
+/**
+ * The result of `POST /v1/search/start` — what to show under an **empty** search field.
+ *
+ * Four independent blocks; any of them can come back empty. Only {@link products} is ranked at all,
+ * and by popularity rather than relevance, which is why its cards carry no `score`.
+ */
+export interface TalqynStartResponse {
+  /**
+   * The impression id for this screen. Send it back in a product-click event with
+   * `source: TalqynEventSource.start`: without it a card tap has no denominator and the screen's
+   * click-through cannot be computed.
+   */
+  readonly searchId: string;
+  /** The locale the screen was built in, as its wire value. */
+  readonly locale: string;
+  /**
+   * This shopper's recent queries, most recently used first. Empty until the token names a shopper —
+   * not a guest — and the storefront reports submitted queries through `talqyn.events`: the block is
+   * assembled from those very events.
+   */
+  readonly history: readonly string[];
+  /**
+   * What this storefront searches for, over the last 30 days. A freshly connected storefront has no
+   * traffic yet, so the block stands on the curated corpus until it does.
+   */
+  readonly popularQueries: readonly string[];
+  /**
+   * Root categories carrying live products, the largest first. Stock and place are not applied here —
+   * the listing behind a tap applies them itself.
+   */
+  readonly categories: readonly TalqynCategory[];
+  /**
+   * Popular products, by clicks over the last 30 days; a storefront without clicks yet falls back to
+   * reviews and ratings. Only products in stock where the shopper is — the city or store of the
+   * request, anywhere when it named neither.
+   */
+  readonly products: readonly TalqynProduct[];
 }
 
 /** The result of `POST /v1/search/full` — one page of a listing. */
@@ -181,6 +220,20 @@ export function decodeSearchResponse(value: unknown): TalqynSearchResponse | und
     brands: readArray(record, 'brands', decodeBrand),
     history: readArray(record, 'history', decodeString),
     correctedFrom: readString(record, 'corrected_from'),
+  };
+}
+
+/** Decodes a start screen. A card that does not decode is dropped on its own; the rest of the block stays. */
+export function decodeStartResponse(value: unknown): TalqynStartResponse | undefined {
+  const record = asRecord(value);
+  if (!record) return undefined;
+  return {
+    searchId: readString(record, 'search_id') ?? '',
+    locale: readString(record, 'locale') ?? 'en',
+    history: readArray(record, 'history', decodeString),
+    popularQueries: readArray(record, 'popular_queries', decodeString),
+    categories: readArray(record, 'categories', decodeCategory),
+    products: readArray(record, 'products', decodeProduct),
   };
 }
 

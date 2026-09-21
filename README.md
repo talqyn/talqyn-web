@@ -106,7 +106,7 @@ or from a CDN that mirrors npm. Pin the exact version, so the SDK changes only
 when the site does:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@talqyn/web@1.0.0/dist/talqyn.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@talqyn/web@1.1.0/dist/talqyn.global.js"></script>
 <script>
   const { Talqyn, TalqynDeviceTokenCredentials, mountTalqynConsultant } = window.TalqynWeb;
 </script>
